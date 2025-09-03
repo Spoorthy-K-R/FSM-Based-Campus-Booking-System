@@ -1,0 +1,67 @@
+# Use Compose spec v3.8 (works with modern Docker Desktop)
+version: "3.8"
+
+services:
+  # -------------------------
+  # ZOOKEEPER (Kafka's metadata store for this setup)
+  # -------------------------
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1    # Zookeeper image version
+    container_name: zookeeper                  # Human-friendly name
+    ports:
+      - "2181:2181"                            # Expose ZK to host (clients use 2181)
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181              # ZK listens for clients here
+      ZOOKEEPER_TICK_TIME: 2000                # Internal heartbeat tick in ms
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data # Persist ZK data between restarts
+      - zookeeper_log:/var/lib/zookeeper/log   # Persist ZK logs
+
+  # -------------------------
+  # KAFKA BROKER
+  # -------------------------
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1         # Kafka image version
+    container_name: kafka                      # Name shows up in `docker ps`
+    depends_on:
+      - zookeeper                              # Ensure ZK starts first
+    ports:
+      - "9092:9092"                            # Host-to-container Kafka port (for your apps on Mac)
+      - "29092:29092"                          # Internal port for containers to talk to Kafka
+    environment:
+      KAFKA_BROKER_ID: 1                       # Unique broker ID (single broker -> 1)
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181  # How Kafka finds ZK (service name + port)
+      # Define two listeners: one for inside Docker network, one for your Mac host
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT_INTERNAL:PLAINTEXT,PLAINTEXT_EXTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT_INTERNAL://0.0.0.0:29092,PLAINTEXT_EXTERNAL://0.0.0.0:9092
+      # Tell clients which addresses to use for each listener
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INTERNAL://kafka:29092,PLAINTEXT_EXTERNAL://localhost:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL  # Brokers talk to each other over INTERNAL
+      # Single-broker friendly settings (no replication quorum)
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    volumes:
+      - kafka_data:/var/lib/kafka/data         # Persist Kafka logs (topics/messages)
+
+  # -------------------------
+  # OPTIONAL: Kafka UI (nice web dashboard at http://localhost:8080)
+  # -------------------------
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest       # Lightweight, popular Kafka UI
+    container_name: kafka-ui
+    depends_on:
+      - kafka
+    ports:
+      - "8080:8080"                            # Open UI on your Mac at localhost:8080
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local             # Display name in the UI
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092  # UI connects from inside Docker network
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181      # (optional) ZK connection
+
+# Named volumes (Docker manages the paths)
+volumes:
+  zookeeper_data:
+  zookeeper_log:
+  kafka_data:
