@@ -15,8 +15,12 @@ public class KafkaConsumer {
 
     @KafkaListener(topics = "booking-events", groupId = "booking-service")
     public void consume(String eventJson) throws Exception {
+
+        System.out.println("Received event: " + eventJson);
         ObjectMapper objectMapper = new ObjectMapper();
         BookingEventPayload event = objectMapper.readValue(eventJson, BookingEventPayload.class);
+
+        System.out.println("Parsed event: " + event);
 
         Booking booking = new Booking();
         booking.setUserName(event.getUserName());
