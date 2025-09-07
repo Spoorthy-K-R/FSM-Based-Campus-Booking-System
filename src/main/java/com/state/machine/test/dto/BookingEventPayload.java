@@ -3,8 +3,12 @@ package com.state.machine.test.dto;
 import lombok.Data;
 // import lombok.Getter;
 // import lombok.Setter;
+import lombok.Getter;
+import lombok.Setter;
 
 @Data
+@Getter
+@Setter
 public class BookingEventPayload {
     
     private String type;     
@@ -14,6 +18,14 @@ public class BookingEventPayload {
     private String facilityId;
     private String startTime;
     private String endTime;
+
+    public String getType() {
+        return type;
+    }
+
+    public String getBookingId() {
+        return bookingId;
+    }
 
     public String getUserId() {
         return userId;
@@ -41,6 +53,14 @@ public class BookingEventPayload {
 
     public void setUserName(String userName) {
         this.userName = userName;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public void setBookingId(String bookingId) {
+        this.bookingId = bookingId;
     }
 
     public void setFacilityId(String facilityId) {
