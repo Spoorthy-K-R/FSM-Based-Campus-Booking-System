@@ -11,8 +11,7 @@ import lombok.Setter;
 @Setter
 public class BookingEventPayload {
     
-    private String type;     
-    private String bookingId;  
+    private String type;  
     private String userId;
     private String userName;
     private String facilityId;
@@ -21,10 +20,6 @@ public class BookingEventPayload {
 
     public String getType() {
         return type;
-    }
-
-    public String getBookingId() {
-        return bookingId;
     }
 
     public String getUserId() {
@@ -57,10 +52,6 @@ public class BookingEventPayload {
 
     public void setType(String type) {
         this.type = type;
-    }
-
-    public void setBookingId(String bookingId) {
-        this.bookingId = bookingId;
     }
 
     public void setFacilityId(String facilityId) {
